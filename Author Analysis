@@ -1,0 +1,149 @@
+#Elias Cottingham
+#Assignment2
+
+'''The top 30 words in all 6 blogs combined:
+    [['the', 36592], ['i', 27631], ['to', 22386], ['and', 20914], ['of', 18114], ['a', 17392], ['it', 11963], ['in', 11629], ['that', 11096], ['is', 9454], ['you', 8884], ['s', 8017], ['for', 7738], ['my', 7011], ['was', 6527], ['on', 6430], ['urllink', 5546], ['have', 5341], ['be', 5074], ['but', 5043], ['t', 5019], ['he', 4906], ['this', 4895], ['with', 4833], ['me', 4670], ['not', 4621], ['we', 4552], ['so', 4031], ['at', 4006], ['as', 3867]]
+'''
+
+import string
+
+def loadData(filenames):
+    '''This function opens and reads the files called on in main, and places them in a giant list called allData. '''
+    allData = ''
+    for i in filenames: #runs through all files called on, assigns eachone to tempfile, opens it, assigns it to data, closes file, and then adds data to allData.
+        infile = open(('BlogData/'+ i),'r')
+        data = infile.read()
+        infile.close()
+        allData += data
+    return(allData)
+
+
+def countWords(wordlist):
+    '''This function finds the number of time the top 30 words occur.'''
+    top30 = [['a', 0], ['and',0], ['as', 0], ['at', 0], ['be', 0], ['but', 0], ['for', 0], ['have', 0], ['he', 0], ['i', 0], ['in', 0], ['is', 0], ['it', 0], ['me', 0], ['my', 0], ['not', 0], ['of', 0], ['on', 0], ['s', 0], ['so', 0], ['t', 0], ['that', 0], ['the', 0], ['this', 0], ['to', 0], ['urllink', 0], ['was', 0], ['we', 0], ['with', 0], ['you', 0]]
+    for j in range(len(top30)): #runs through 0-29 to see if i = the current word..For i runs 30 times. NOT EFFICIENT!
+        for i in wordlist: #runs through each word, compares it to the last word in list wclist, if it is the same it adds one to the count, if not it adds the word and one to wclist as a new list.
+            if top30[j][0] == i:
+               top30[j][1]+=1
+    return(top30)
+
+def cleanData(data):
+    '''This function makes a string all lower case, calls removePunc, splits the string, and then sorts it. '''
+    data = string.lower(data)
+    data = removePunc(data)
+    datastrings = string.split(data)
+    list.sort(datastrings)
+    return datastrings
+
+
+def removePunc(data):
+    '''This function removes all punctuation and digits from a string.'''
+    for c in string.digits:
+        data = string.replace(data,c,' ')
+    for c in string.punctuation:
+        data = string.replace(data,c,' ')
+    return data
+
+
+def secondItem(lst):
+    '''This Function returns the second item in a list.'''
+    return lst[1]
+
+def OnlyNumber(List):
+    '''This function is meant for a list of lists, and removes the lists and replaces them with the second value in the lists.'''
+    for i in range(len(List)):
+        List[i] = List[i][1]
+    return List
+
+def cent(allwords, Count):
+    '''This function calculates the percent each of the top 30 words occur, by taking the number of times each one occurs and deevides by the total about of words in the document.'''
+    totwordnum = 0
+    percent=[]
+    for l in allwords: #counts the total number of words
+        totwordnum +=1
+    for i in Count:
+        ithpercent =((i/totwordnum)*100)
+        percent.append(ithpercent)
+    return(percent)
+
+
+
+def main(Call):
+    '''This function imputs a call treats it as a file, loads and processes the data and converts it into a list of percents which represent how much of the file each of the top 30 words are.'''
+    files = [Call]
+    dat = loadData(files)
+    dat = cleanData(dat)
+    wordCount = countWords(dat)
+    wordCount = wordCount[:30] #Cuts the list down to the first 30
+    Count = OnlyNumber(wordCount)
+    percent = cent(dat, Count)
+    return(percent)
+
+
+
+def compare(File1, File2):
+    '''This function takes two imputes File1 and File2 (Blogger and a testfile). Calls main on both files to get the list of percents, and then calculates the normalized Euclidean distance.'''
+    dataFile1 = main(File1) #dataFile1 represents the list of percents the top 30 words occur
+    dataFile2 = main(File2) #dataFile1 represents the list of percents the top 30 words occur
+    distanceSum = 0
+    i = 0
+    while i < 30: # This plugs all 30 words in to the distance equation distance=(u1-v1)^2+(u2-v2)^2+...(un-vn)^2/n 
+        distanceSum += ((dataFile1[i] - dataFile2[i])**2)
+        i+=1
+    difference = ((distanceSum ** .5)/30)
+    return(difference)
+
+
+def compute(Blogger):
+    '''This function runs through each test file and calls the compare function to determin the distance between the blogger and the testfile.'''
+    i = 1
+    while i <= 12:
+        test = 'test.' + str(i)
+        difference = compare(Blogger , test)
+        print(test)
+        print(difference)
+        difference = 0
+        i+=1
+
+
+
+compute('Blogger1')
+
+'''
+Note
+
+Blogger1 = 106651.male.25.indUnk.Leo.xml_train
+
+Blogger2 = 1472995.female.27.indUnk.Aries.xml_train
+
+Blogger3 = 303162.female.38.indUnk.Virgo.xml_train 
+
+Blogger4 = 589736.male.35.Technology.Aries.xml_train 
+
+Blogger5 = 883178.male.36.Fashion.Aries.xml_train
+
+Blogger6 = 942828.female.34.indUnk.Cancer.xml_train
+
+
+
+Blogger1= [['a', 1603], ['and', 2046], ['as', 238], ['at', 385], ['be', 490], ['but', 408], ['for', 636], ['have', 417], ['he', 284], ['i', 3435], ['in', 1021], ['is', 763], ['it', 1064], ['me', 481], ['my', 930], ['not', 280], ['of', 1307], ['on', 629], ['s', 1017], ['so', 403], ['t', 641], ['that', 1151], ['the', 3473], ['this', 627], ['to', 2143], ['urllink', 1147], ['was', 562], ['we', 394], ['with', 406], ['you', 1104]]
+Blogger2= [['a', 3310], ['and', 2977], ['as', 417], ['at', 736], ['be', 729], ['but', 764], ['for', 1386], ['have', 883], ['he', 580], ['i', 6596], ['in', 1774], ['is', 1291], ['it', 2298], ['me', 1133], ['my', 1683], ['not', 635], ['of', 1989], ['on', 1051], ['s', 1554], ['so', 748], ['t', 1026], ['that', 1462], ['the', 5076], ['this', 799], ['to', 3701], ['urllink', 1743], ['was', 1370], ['we', 754], ['with', 878], ['you', 1661]]
+Blogger3= [['a', 2430], ['and', 2852], ['as', 629], ['at', 470], ['be', 767], ['but', 718], ['for', 1226], ['have', 762], ['he', 479], ['i', 2738], ['in', 1770], ['is', 1403], ['it', 1453], ['me', 448], ['my', 657], ['not', 776], ['of', 2629], ['on', 870], ['s', 1138], ['so', 428], ['t', 710], ['that', 1998], ['the', 6066], ['this', 642], ['to', 3221], ['urllink', 330], ['was', 741], ['we', 709], ['with', 624], ['you', 1297]]
+Blogger4= [['a', 4131], ['and', 3689], ['as', 621], ['at', 816], ['be', 788], ['but', 1085], ['for', 1419], ['have', 1056], ['he', 706], ['i', 6551], ['in', 2146], ['is', 1652], ['it', 2393], ['me', 1032], ['my', 1670], ['not', 848], ['of', 2722], ['on', 1332], ['s', 1579], ['so', 741], ['t', 1129], ['that', 2051], ['the', 6244], ['this', 1015], ['to', 4287], ['urllink', 409], ['was', 1393], ['we', 828], ['with', 1066], ['you', 2148]]
+Blogger5= [['a', 3587], ['and', 6443], ['as', 1627], ['at', 926], ['be', 1454], ['but', 1042], ['for', 2005], ['have', 1145], ['he', 2066], ['i', 2789], ['in', 3681], ['is', 3213], ['it', 2423], ['me', 803], ['my', 987], ['not', 1528], ['of', 7972], ['on', 1642], ['s', 1137], ['so', 747], ['t', 202], ['that', 2422], ['the', 12079], ['this', 1213], ['to', 5487], ['urllink', 1917], ['was', 1511], ['we', 881], ['with', 1187], ['you', 836]]
+Blogger6= [['a', 2331], ['and', 2907], ['as', 335], ['at', 673], ['be', 846], ['but', 1026], ['for', 1066], ['have', 1078], ['he', 791], ['i', 5522], ['in', 1237], ['is', 1132], ['it', 2332], ['me', 773], ['my', 1084], ['not', 554], ['of', 1495], ['on', 906], ['s', 1592], ['so', 964], ['t', 1311], ['that', 2012], ['the', 3654], ['this', 599], ['to', 3547], ['urllink', 0], ['was', 950], ['we', 986], ['with', 672], ['you', 1838]]
+
+test1 = [['a', 450], ['and', 609], ['as', 72], ['at', 119], ['be', 156], ['but', 202], ['for', 218], ['have', 184], ['he', 103], ['i', 1037], ['in', 210], ['is', 199], ['it', 399], ['me', 128], ['my', 197], ['not', 102], ['of', 302], ['on', 165], ['s', 274], ['so', 161], ['t', 253], ['that', 324], ['the', 771], ['this', 109], ['to', 718], ['urllink', 0], ['was', 197], ['we', 191], ['with', 124], ['you', 318]]
+test2 = [['a', 752], ['and', 635], ['as', 109], ['at', 152], ['be', 141], ['but', 165], ['for', 284], ['have', 169], ['he', 120], ['i', 1301], ['in', 380], ['is', 264], ['it', 444], ['me', 216], ['my', 352], ['not', 142], ['of', 456], ['on', 233], ['s', 317], ['so', 152], ['t', 223], ['that', 317], ['the', 1081], ['this', 197], ['to', 756], ['urllink', 98], ['was', 266], ['we', 133], ['with', 157], ['you', 353]]
+test3 = [['a', 521], ['and', 668], ['as', 76], ['at', 143], ['be', 165], ['but', 212], ['for', 243], ['have', 203], ['he', 170], ['i', 1196], ['in', 253], ['is', 234], ['it', 490], ['me', 157], ['my', 267], ['not', 105], ['of', 312], ['on', 188], ['s', 273], ['so', 217], ['t', 265], ['that', 354], ['the', 790], ['this', 126], ['to', 754], ['urllink', 1], ['was', 243], ['we', 207], ['with', 120], ['you', 280]]
+test4 = [['a', 425], ['and', 445], ['as', 118], ['at', 63], ['be', 127], ['but', 104], ['for', 210], ['have', 124], ['he', 84], ['i', 503], ['in', 362], ['is', 255], ['it', 251], ['me', 77], ['my', 122], ['not', 115], ['of', 481], ['on', 136], ['s', 227], ['so', 97], ['t', 110], ['that', 338], ['the', 1022], ['this', 116], ['to', 538], ['urllink', 58], ['was', 115], ['we', 91], ['with', 112], ['you', 189]]
+test5 = [['a', 986], ['and', 873], ['as', 163], ['at', 177], ['be', 183], ['but', 260], ['for', 344], ['have', 239], ['he', 200], ['i', 1626], ['in', 477], ['is', 380], ['it', 630], ['me', 261], ['my', 425], ['not', 221], ['of', 634], ['on', 281], ['s', 422], ['so', 177], ['t', 316], ['that', 502], ['the', 1441], ['this', 203], ['to', 1082], ['urllink', 77], ['was', 321], ['we', 174], ['with', 237], ['you', 448]]
+test6 = [['a', 918], ['and', 1646], ['as', 364], ['at', 219], ['be', 366], ['but', 293], ['for', 450], ['have', 282], ['he', 451], ['i', 570], ['in', 849], ['is', 759], ['it', 672], ['me', 161], ['my', 184], ['not', 413], ['of', 1943], ['on', 341], ['s', 244], ['so', 180], ['t', 56], ['that', 543], ['the', 2850], ['this', 308], ['to', 1244], ['urllink', 403], ['was', 463], ['we', 197], ['with', 299], ['you', 179]]
+test7 = [['a', 409], ['and', 445], ['as', 41], ['at', 95], ['be', 108], ['but', 97], ['for', 179], ['have', 110], ['he', 75], ['i', 743], ['in', 241], ['is', 199], ['it', 247], ['me', 150], ['my', 178], ['not', 78], ['of', 325], ['on', 135], ['s', 266], ['so', 103], ['t', 131], ['that', 285], ['the', 776], ['this', 166], ['to', 510], ['urllink', 317], ['was', 148], ['we', 130], ['with', 101], ['you', 216]]
+test8 = [['a', 734], ['and', 1418], ['as', 303], ['at', 197], ['be', 274], ['but', 191], ['for', 422], ['have', 219], ['he', 469], ['i', 536], ['in', 731], ['is', 706], ['it', 419], ['me', 169], ['my', 256], ['not', 270], ['of', 1775], ['on', 290], ['s', 215], ['so', 141], ['t', 50], ['that', 509], ['the', 2567], ['this', 222], ['to', 1158], ['urllink', 388], ['was', 305], ['we', 185], ['with', 242], ['you', 137]]
+test9 = [['a', 689], ['and', 634], ['as', 81], ['at', 142], ['be', 166], ['but', 145], ['for', 315], ['have', 158], ['he', 74], ['i', 1374], ['in', 347], ['is', 272], ['it', 459], ['me', 225], ['my', 397], ['not', 113], ['of', 443], ['on', 231], ['s', 307], ['so', 151], ['t', 177], ['that', 288], ['the', 1063], ['this', 156], ['to', 777], ['urllink', 355], ['was', 233], ['we', 124], ['with', 211], ['you', 292]]
+test10 = [['a', 659], ['and', 586], ['as', 77], ['at', 139], ['be', 155], ['but', 138], ['for', 257], ['have', 161], ['he', 137], ['i', 1338], ['in', 323], ['is', 247], ['it', 461], ['me', 220], ['my', 321], ['not', 152], ['of', 424], ['on', 196], ['s', 312], ['so', 161], ['t', 176], ['that', 278], ['the', 1017], ['this', 179], ['to', 797], ['urllink', 370], ['was', 261], ['we', 203], ['with', 161], ['you', 332]]
+test11 = [['a', 208], ['and', 224], ['as', 20], ['at', 45], ['be', 57], ['but', 40], ['for', 81], ['have', 45], ['he', 36], ['i', 447], ['in', 161], ['is', 118], ['it', 146], ['me', 78], ['my', 140], ['not', 38], ['of', 185], ['on', 67], ['s', 155], ['so', 42], ['t', 80], ['that', 140], ['the', 406], ['this', 79], ['to', 244], ['urllink', 220], ['was', 83], ['we', 48], ['with', 51], ['you', 102]]
+test12 = [['a', 577], ['and', 577], ['as', 135], ['at', 112], ['be', 152], ['but', 144], ['for', 243], ['have', 149], ['he', 195], ['i', 597], ['in', 416], ['is', 319], ['it', 319], ['me', 90], ['my', 138], ['not', 175], ['of', 559], ['on', 201], ['s', 272], ['so', 71], ['t', 146], ['that', 401], ['the', 1410], ['this', 143], ['to', 738], ['urllink', 74], ['was', 223], ['we', 94], ['with', 159], ['you', 277]]
+
+'''
