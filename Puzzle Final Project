@@ -1,0 +1,242 @@
+#Elias Cottingham
+#Final Project
+
+
+## Over View
+## This takes a photo and turns it into a puzzle game.
+## *In main replace 'superman.jpg' with any pic*
+## It breaks the photo into 9 pieces and scrambles them.
+## The point of the game is to move the other pieces back into order.
+## *Note contrary to the code to play you do not move the empty spot, but slide the other tiles*
+## GoodLuck
+## It is less than 300 lines but I feel the integrated matrix is quite complex (also always been told less lines == better code..?)
+## ***You have to click on the window to move and to print on it. Aka if you hit excape it will only print quiter if your on that window.. I dont know why**
+
+
+
+from Graphics import *
+from math import *
+from Myro import *
+import random
+
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
+class Board:
+    '''inport a picture (object) then
+    places it in window, cut it into 3rds.'''
+    def __init__(self,win,pic):
+        pic.draw(win) #Draws the picture in the window
+        self.win = win #adds win to self attribute
+        self.boxL = int(self.win.getWidth()/3)#x legnth of each square
+        self.boxH = int(self.win.getHeight()/3)#y legnth of each square
+        self.Plst = self.cut(pic) # sets Plst (picture list) to the list of picures returned from cut
+        self.piece = self.Squares() # sets Plst to the list returned from cut
+        wait(1) #pauses for a second because you see the whole picture before its cut up
+        self.piece[0].draw(win) #draws a blank piece/square on the board
+        for x in range(1,9):#All pictures in Plst get placed on a piece, except for the top right picture isnt drawn
+            self.piece[x].draw(win) #draws each square x on the board
+            self.Plst[x].draw(self.piece[x]) #draws picture piece x on piece x
+            self.Plst[x].move((-self.boxL/2),(-self.boxH/2))#centers picture x on pieces x
+        pic.undraw() #undraws original picture
+        self.piece = self.matrix(self.piece) #Sets up a matrix, by adding a second/location variable to the piece
+
+
+    def __str__(self):
+        return(self)
+
+
+
+
+    def cut(self,pic): #cuts the picture into 9quadrents and places them in list
+        the_pic = pic
+        r = 0 #row
+        c = 0 #colum
+        Plst = [] #picture list
+        while(c<=2): #9 piece puzzle meaning 3 columns (0,1,2)
+            P = Picture(self.boxL,self.boxH) #P = a picture with the dementions of each time.. 1/3 of the total board
+            for x in range(r*self.boxL, (r+1)*self.boxL): #x goes over every val over the distance of a piece.
+                for y in range(c*self.boxH, (c+1)*self.boxH): #y goes over every val over the distance of a piece.
+                    pixel = getPixel(the_pic, x, y) #get pixel val
+                    setPixel(P,x+(r*self.boxL), y+(c*self.boxH),pixel) #places the pixel in P
+            r+=1
+            if r == 3:
+                c+=1
+                r = 0
+            Plst.append(P) # adds each pictue to Plst
+        return(Plst)
+
+
+
+    def Squares(self): #Creates a rectangle for each of the 9 puzzle pieces
+        piece = []
+        for i in range(3):
+            for j in range(3):
+                p = Rectangle((j*self.boxL, i*self.boxH),((j+1)*self.boxL, (i+1)*self.boxH))# makes 9 squares/rectangles
+                piece.append(p) #adds each rectangle to piece list
+        return(piece)
+
+
+    def matrix(self, piece): #takes piece list and makes it a list of lists with the second object in each list within a list acts as location.
+        templst = piece #adds list into mem so its not lost
+        piece = []
+        for i in range(len(templst)): #for each object in templst it places it in a new list with i as a second object in that list. then adds it to piece
+            lst = [templst[i],i]
+            piece.append(lst)
+        return piece
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
+class Play:
+    '''This class takes a picture,window, creates a board.
+    then it creates the rules of moving, shuffles the board,
+    and lets you rearange the tiles so you can play.'''
+    def __init__(self, win, p,w,h):
+        self.board = Board(win, p)#creates a board
+        self.pic = p
+        self.win = win
+        wait(1)
+        self.shuffle()#shuffles the board
+        key = win.getKeyPressed()#sets key to what ever key is pressed
+        while key != 'Escape':#if key is escape it closes the ends the game
+            key = win.getKeyPressed()
+            if key == ('Left') or ('Right') or ('Up') or ('Down'):#if any of the arrow keys are hit it swaps the tiles
+                spot= self.findSwap(key)#**spot = [block number to swap with, x val it needs to move, y val it needs to move
+                self.swap(spot) #swaps the blank piece with spot
+            if self.board.piece[0][1]==0:#if the blank piece is in location 0 it checks if the puzzle is solved
+                if self.won(): #if won returns true it prints "you solved it!"
+                    finished = Text((w/2, h/2), "YOU SOLVED IT!")
+                    finished.fill = Color("blue")
+                    finished.draw(win)
+                    return
+        finished = Text((w/2, h/2), "QUITER!") #if you hit escape it prints "quitter!"
+        finished.fill = Color("blue")
+        finished.draw(win)
+        return
+
+
+## Everything from here down was very hard!
+## I did it by making a 9 part matrix list
+## [[pic, 0], [pic, 1], [pic, 2],
+##  [pic, 3], [pic, 4], [pic, 5],
+##  [pic, 6], [pic, 7], [pic, 8]]
+## each point has its picure and its location
+## each time the blank/empty tile (piece[0]) moves
+## it takes the position of the tile it swaps with
+## (piece[0][1] = piece[x][1]) then I did the same
+## with that one.
+
+
+
+    def findSwap(self, key):
+        '''This function has 4 different cases, Left, Right, Up, and Down
+        for each case it checks if where the blank/empty tile is and whether
+        it can move in said dirrection. If the empty tile is on the top row
+        it will not be able to move down, nothing can move from above it.
+        left row cannot move right. right row cannot move left. bottom cannot
+        move up. if it cannot move it returns the spot to move to as blank and nothing happens.'''
+        if key == 'Left':
+            val = -1
+            NBN = self.board.piece[0][1] - val #next block number aka the location of where the blank will be after it moves
+            if ((NBN != 3) and (NBN != 6) and (NBN != 9)): #checks it can move and wont goe off screen. seems redundent but necesary
+                for x in range(len(self.board.piece)): #finds the location of each block
+                    if NBN == self.board.piece[x][1]:#returns location of the tile that matches nbn, plus the x and why val the swapping tile needs to move.
+                        return(list([x,1,0]))
+            else: #other wise returns blank
+                return (list(['Blank',0,0]))
+
+        elif key == 'Right': #All oterh directional calls are reletively the same
+            val = 1
+            NBN = self.board.piece[0][1] - val #nbn shoter name easier to copy
+            if ((NBN != -1) and (NBN != 2) and (NBN !=5)):
+                for x in range(len(self.board.piece)):
+                    if NBN == self.board.piece[x][1]:
+                        return(list([x,(-1),0]))
+            else:
+                return (list(['Blank',0,0]))
+
+        elif key == 'Up':
+            val = -3
+            NBN = self.board.piece[0][1] - val
+            if (((NBN != 6) or (NBN != 7) or (NBN != 8)) and (NBN < 9)):
+                for x in range(len(self.board.piece)):
+                    if NBN == self.board.piece[x][1]:
+                        return(list([x,0,1]))
+            else:
+                return (list(['Blank',0,0]))
+
+        elif key == 'Down':
+            val = 3
+            NBN = self.board.piece[0][1] - val
+            if (((NBN != -1) or (NBN != 1) or (NBN !=2)) and (NBN > -1)):
+                for x in range(len(self.board.piece)):
+                    if NBN == self.board.piece[x][1]:
+                        return(list([x,0,(-1)]))
+
+            else:
+                return (list(['Blank',0,0]))
+
+        else:
+            return (list(['Blank',0,0]))
+
+
+
+
+    def swap(self, spot):
+        '''After verifying it can swap it does'''
+        if (spot[0]!= 'Blank'): #spot [0] only == blank if it cannot move
+            self.board.piece[0][0].move((spot[1]*self.board.boxL),(spot[2]*self.board.boxH))#move the empty piece
+            self.board.piece[(spot[0])][0].move((-spot[1]*self.board.boxL),(-spot[2]*self.board.boxH)) #moves the swapping peice
+            temp = self.board.piece[0][1]#remembers where the empty tile was (in the matrix)
+            self.board.piece[0][1] = self.board.piece[(spot[0])][1] #sets the empty tile to its new location
+            self.board.piece[(spot[0])][1] = temp #gives the moved peice the empty tile old location
+            spot = ['Blank',0,0]#makes spot blank untill defined by next key
+        else:
+            return
+
+    def shuffle(self):
+        '''shuffles the tiles by making 5-30 random moves in random directions'''
+        self.moves = random.randint(5,30) #minimum shuffle could be 5 moves max could be 30
+        for i in range(self.moves): #the number of moves it randomely picks a direction anf moves the tile
+            direct = random.randint(1,4)#randomly picks a direction
+            if direct == 1: #if direction  = 1 moves the left tile (if it can)
+                key  = 'Left'
+                spot = self.findSwap(key)
+                self.swap(spot)
+            elif direct == 2: #if direction  = 2 moves the right tile (if it can)
+                key  = 'Right'
+                spot = self.findSwap(key)
+                self.swap(spot)
+            elif direct == 3: #if direction  = 3 moves the up tile (if it can)
+                key  = 'Up'
+                spot = self.findSwap(key)
+                self.swap(spot)
+            else: #if direction  = 4 moves the down tile (if it can)
+                key  = 'Down'
+                spot = self.findSwap(key)
+                self.swap(spot)
+
+    def won(self):#if the matrix is back in original order it redraws pic and returns true which ends play.
+        check = []
+        for i in range(len(self.board.piece)): #for each ecach piece it adds the location to check list
+            check.append(self.board.piece[i][1])
+        if check == [0,1,2,3,4,5,6,7,8]: # oif check list is in order it returns true
+            self.pic.draw(self.win)
+            return True
+
+
+
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
+def main():
+    p = Picture('superman.jpg') #input any photo here!
+    w=int(getWidth(p)) #width
+    h=int(getHeight(p)) #height
+    win = Window('ShuffleBoard',w,h)
+    Play(win, p,w,h)
+
+main()
