@@ -1,0 +1,342 @@
+#Elias Cottingham
+#December 9th
+#Version with Person, Student, and Menu
+# Used for Lab #10.  Students add an Employee class
+
+# and binary search.
+
+import string
+import random
+
+######################################################################
+
+def binarySearch(target,lst):
+    '''Returns the index of target in lst, a list.  
+    Returns -1 if target is not in the lst.'''
+    lo = 0
+    hi = (len(lst)-1)
+    while lo <= hi:
+        mid  = ((hi+lo)//2)
+        midname = lst[mid].getSurname() + lst[mid].getFirstName() #mid name is the string of lastname and first name of each person
+        if (target == midname):
+            return mid
+        elif (target <= midname):
+            hi = (mid - 1)
+        else:
+            lo = (mid + 1)
+    return -1
+
+
+######################################################################
+def swap(lst,i,j):
+    '''Swap lst[i] with lst[j].'''
+    tmp = lst[i]
+    lst[i] = lst[j]
+    lst[j] = tmp
+
+def findMin(lst,pos):
+    '''Returns index of smallest item in lst[pos:].'''
+    minidx = pos
+    pos += 1
+    while pos < len(lst):
+        if lst[pos] < lst[minidx]:
+            minidx = pos
+        pos += 1
+    return minidx
+
+def sort(lst):
+    '''Sort the elements of the list in place.'''
+    i = 0
+    while i < len(lst):
+        minindex = findMin(lst,i)
+        swap(lst,i,minindex)
+        i += 1
+
+######################################################################
+
+class Address(object):
+    '''A very basic Address class.'''
+    def __init__(self,street,city,state,zip):
+        self.street = street
+        self.city = city
+        self.state = state
+        self.zip = zip
+
+    def __str__(self):
+        return self.street + ', ' + self.city + ', ' + self.state + ', ' + self.zip
+
+######################################################################
+
+class Person(object):
+    '''Represent a person with name, address, gender.'''
+
+    # Class attributes.  They are shared by all objects.
+    FEMALE = 'female'
+    MALE = 'male'
+    BLANK = ''
+    STUDENT = 's'
+    EMPLOYEE = 'e'
+    LAST_ID = 1
+
+    def __init__(self,firstname=None,surname=None,address=None,gender=None):
+        '''Create a Person object. Use Address object for address and 
+        FEMALE/MALE for gender.'''
+        if (firstname != None):
+            self.firstname = firstname
+            self.surname = surname
+            self.address = address
+            self.gender = gender
+
+        else:
+            self.firstname = self.BLANK
+            self.surname = self.BLANK
+            self.address = self.BLANK
+            self.gender = self.BLANK
+            self.last_id = self.BLANK
+            self.id = self.LAST_ID
+            Person.LAST_ID += 1
+    def __str__(self):
+        '''String equiv of a person.'''
+        return  str(self.id) + ', ' + self.surname + ', ' + self.firstname  + ', ' + str(self.address)
+
+    ## Setters
+    def setFirstName(self,fname):
+        self.firstname = fname
+    def setSurname(self,name):
+        self.surname = name
+    def setAddress(self,addr):
+        self.address = Address(addr)
+
+    ## Getters
+    def getFirstName(self):
+        return self.firstname
+    def getSurname(self):
+        return self.surname
+    def getAddress(self):
+        return self.address
+
+    def parseString(self,line):
+        '''Parse a string called line containing all necessary
+        fields for a Person object in correct order.
+        '''
+        dat = line.split(',')
+
+        # Set all shared fields
+        self.surname = dat[1]
+        self.firstname = dat[2]
+        self.address = Address(dat[3],dat[4],dat[5],dat[6])
+        if dat[7] == 'M':
+            self.gender = self.MALE
+        elif dat[7] == 'F':
+            self.gender = self.FEMALE
+
+
+    def __eq__(self,other):
+        '''True iff self and other share both names.'''
+        return self.surname == other.surname and self.firstname == other.firstname
+
+    def __cmp__(self,other):
+        '''Uses lexicographic order 0 for equality, 1 for self>other, -1 for self<other.'''
+        if self == other:
+            return 0
+        elif self.surname > other.surname:
+            return 1
+        elif other.surname > self.surname:
+            return -1
+        else:
+            if self.firstname > other.firstname:
+                return 1
+            else:
+                return -1
+
+
+######################################################################
+
+class Student(Person):
+    '''Implements a Student class.'''
+    def __init__(self,firstname=None,surname=None,address=None,gend=None,id=0):
+        '''Overrides inherited init method.'''
+        Person.__init__(self,firstname,surname,address,gend)
+        self.homeAddress = None
+        self.studentID = id
+        if (id != 0):
+            self.studentID = id
+
+    def __str__(self):
+        return 'Student: ' + str(self.studentID) + '\t'+ Person.__str__(self) + '\n\tHome: ' + str(self.homeAddress)
+
+    def getLocalAddress(self):
+        return self.getAddress()
+
+    def setLocalAddress(self,addr):
+        self.setAddress(addr)
+
+    def getHomeAddress(self):
+        return self.homeAddress
+
+    def setHomeAddress(self,addr):
+        self.homeAddress = addr
+
+    def getStudentID(self):
+        return self.studentID
+    def setStudentID(self,id):
+        self.studentID = id
+
+    def parseString(self,line):
+        '''Overrides the parseString method of Person, adding
+        ability to deal with students.'''
+        
+        Person.parseString(self,line)
+        dat = line.split(',')
+        self.studentID = dat[8]
+
+######################################################################
+
+
+#class Employee:
+class Employee(Person):
+    '''Implements a Employee class.'''
+
+    def __init__ (self,firstname=None,surname=None,address=None,gend=None,wage=0):
+        '''Overrides inherited init method.'''
+        Person.__init__(self,firstname,surname,address,gend)
+        minWage = 7.25
+        self.wage = minWage
+        if (wage != 0):
+            self.wage = wage
+
+    def __str__(self):
+        return 'Employee: ' + Person.__str__(self) + ', $%.2f'% + self.wage
+
+    def getWage(self):
+        return self.Wage()
+
+    def setWage(self,wage):
+        self.wage = wage
+
+    def parseString(self,line):
+        Person.parseString(self,line)
+        dat = line.split(',')
+        self.wage = float(dat[8])###dat[what val]
+
+
+
+
+######################################################################
+
+######################################################################     
+class Database(object):
+    '''Maintain a contacts database.'''
+    def __init__(self,fname=None):
+        '''Load database from file called fname.
+        Format of file is surname,firstname,street,city,state,zip,gender
+        '''
+        self.data = []
+        if (fname == None): return
+        fd = open(fname,'r')
+        p = None
+        for line in fd.readlines():
+            if line[0] == Person.STUDENT:
+                p = Student()
+            elif line[0] == Person.EMPLOYEE:
+                p = Employee()
+            else:
+                p = Person()
+
+            p.parseString(line)
+
+            if (p.getSurname() != Person.BLANK):
+                self.data.append(p)
+        fd.close()
+
+    def __str__(self):
+        dbstring = ''
+        for item in self.data:
+            dbstring += str(item)+'\n'
+            dbstring += '\n'
+        return dbstring
+
+    def getData(self):
+        return self.data
+
+    def merge(self,db2):
+        '''Merge two databases together, eliminating duplicates.'''
+        newItems = []
+        for item2 in db2.data:
+            duplicate = False
+            for item1 in self.data:
+                if item1 == item2:
+                    duplicate = True
+                    break
+            if not duplicate:
+                newItems.append(item2)
+        newdb = Database()
+        newdb.data = self.data + newItems
+        return newdb
+
+    def find(self,lname,firstname):
+        '''Find person with lastname and firstname in the 
+        database.  Returns None if no such person is found.
+        '''
+        for item in self.data:
+            if item.getSurname() == lname and item.getFirstName() == firstname:
+                return item
+        return None
+
+    def findBS(self,lname,firstname):
+        target = lname + firstname #target is the string of the last and first name of whos being searched.
+        found = binarySearch(target,self.data) #found it the location of the name in the list
+        if (found != -1):
+            return (self.data[found]) #This get the informaiton of the target
+        else:
+            return None
+
+
+######################################################################
+
+
+def main():
+    '''Demonstrate use of the databse with a menu of commands.'''
+    cmd = ''
+    db = None
+    db = Database('bigDB.dat')
+    Running = True
+    while Running:
+        cmd = raw_input('Enter command: ')
+        if (cmd == 'q'):
+            print('Quitting...')
+            Running = False
+        elif cmd == 'o':
+            filename = raw_input('Enter filename: ')
+            db = Database(filename)
+        elif cmd == 'b': #TODO find using binary search
+            sort(db.getData())
+            lastname = raw_input('Enter last name: ')
+            firstname = raw_input('Enter first name: ')
+            found = db.findBS(lastname,firstname) # TODO: You must implement findBS
+            if (found is None):
+                print('Name not found:',lastname)
+            else: print(found)
+        elif cmd == 'f':
+            lastname = raw_input('Enter last name: ')
+            firstname = raw_input('Enter first name: ')
+            found = db.find(lastname, firstname)
+            if (found is None):  # Don't use == here!
+                print('Name not found:',lastname) 
+            else: print(found)
+        elif cmd == 'p':
+            print(db)
+        elif cmd == 's':
+            sort(db.getData())
+            print(db)
+        else:
+            print('Possible commands: b/f/o/p/q/s for bsearch/find/open/print/quite/sort')
+
+
+#main()
+
+# Create an employee object here.
+main()
+#emp = Employee('Eli','Cottingham',Address('1 My Road','Eager', 'AZ', '93051'),'M', 12.50)
+#print(emp)
+
