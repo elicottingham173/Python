@@ -9,7 +9,7 @@ import string
 import random
 
 ######################################################################
-# TODO: Put your binary search algorithm here.
+
 def binarySearch(target,lst):
     '''Returns the index of target in lst, a list.  
     Returns -1 if target is not in the lst.'''
